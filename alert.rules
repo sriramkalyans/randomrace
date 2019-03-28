@@ -1,0 +1,56 @@
+groups:
+- name: DevOps Alert
+  rules:
+  - alert: OutOfMemory
+    expr: (node_memory_MemFree_bytes + node_memory_Cached_bytes + node_memory_Buffers_bytes) / node_memory_MemTotal_bytes * 100 < 10
+    for: 30s
+    labels:
+      severity: warning
+    annotations:
+      summary: "Out of memory (instance {{ $labels.instance }})"
+      description: "Node memory is filling up (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+  - alert: UnusualDiskReadRate
+    expr: sum by (instance) (irate(node_disk_read_bytes_total[2m])) / 1024 / 1024 > 50
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Unusual disk read rate (instance {{ $labels.instance }})"
+      description: "Disk is probably reading too much data (> 50 MB/s)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+  - alert: UnusualDiskWriteRate
+    expr: sum by (instance) (irate(node_disk_written_bytes_total[2m])) / 1024 / 1024 > 50
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Unusual disk write rate (instance {{ $labels.instance }})"
+      description: "Disk is probably writing too much data (> 50 MB/s)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+  - alert: OutOfDiskSpace
+    expr: node_filesystem_free_bytes{mountpoint ="/rootfs"} / node_filesystem_size_bytes{mountpoint ="/rootfs"} * 100 < 10
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Out of disk space (instance {{ $labels.instance }})"
+      description: "Disk is almost full (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+  - alert: CpuAlert
+    expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{job="node",mode="idle"}[5m])) * 100) > 2
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: "CPU load (instance {{ $labels.instance }})"
+      description: "CPU load (15m) is high\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+
+  - alert: NodeCPUUsage
+    expr: (100 - (avg by (instance) (irate(node_cpu{name="node-exporter",mode="idle"}[5m])) * 100)) > 75
+    for: 15m
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.instance}}: High CPU usage detected"
+      description: "{{$labels.instance}}: CPU usage is above 75% (current value is: {{ $value }})"

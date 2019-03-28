@@ -1,0 +1,20 @@
+global:
+  smtp_smarthost: 'localhost:25'
+  smtp_from: 'alertmanager@prometheus.com'
+  smtp_auth_username: ''
+  smtp_auth_password: ''
+  smtp_require_tls: false
+
+templates:
+- '/etc/alertmanager/template/*.tmpl'
+
+route:
+  repeat_interval: 1h
+  receiver: operations-team
+
+receivers:
+- name: 'operations-team'
+  email_configs:
+  - to: 'srigiriraju_sriramkalyan@bah.com'
+    send_resolved: true
+
